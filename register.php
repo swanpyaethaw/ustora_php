@@ -4,30 +4,120 @@ session_start();
 require "config/config.php";
 require "config/common.php";
 
-
-
 if(isset($_POST['submit'])){
-  $email = $_POST['email'];
-  $password = $_POST['password'];
-
-  $stmt = $pdo->prepare("SELECT * FROM users WHERE email=:email");
-  $stmt->execute([
-    ":email" => $email
-  ]);
-  $user = $stmt->fetch(PDO::FETCH_ASSOC);
-  if($user){
-    if(password_verify($password,$user['password'])){
-      $_SESSION['user_name'] = $user['name'];
-      $_SESSION['user_id'] = $user['id'];
-      $_SESSION['user_role'] = $user['role'];
-      $_SESSION['user_image'] = $user['image'];
-      $_SESSION['logged_in'] = time();
-      header('location:index.php');
-    }
-  }
-  echo "<script>alert('Incorrect credentials')</script>";
  
+    $nameCheck = preg_match('/^[a-z\d]{4,12}$/i',$_POST['name']);
+    $emailCheck = preg_match('/^[a-z\d]+@[a-z]+\.[a-z]{2,3}(\.[a-z]{2})?$/',$_POST['email']);
+    $phoneCheck = preg_match('/^09[\d]{9}$/',$_POST['phone']);
+    $passCheck = preg_match('/^[\w@-]{8,20}$/',$_POST['password']);
+
+
+    if(empty($_POST['name']) || empty($_POST['email']) || empty($_POST['phone']) || empty($_POST['address']) || empty($_POST['password']) || $nameCheck != 1 || $emailCheck != 1 || $passCheck != 1 || $phoneCheck != 1){
+        if(empty($_POST['name'])){
+            $nameError = "The name field is required";
+        }else{
+       
+          if($nameCheck != 1){
+            $nameError = "Username must be alphanumeric and contain 4-12 characters";
+          }
+        }
+    
+        if(empty($_POST['email'])){
+            $emailError = "The email field is required";
+        }else{
+         
+            if($emailCheck != 1){
+                $emailError = "Email must be a valid address.e.g. me@mydomain.com";
+            }
+    
+           
+        }
+    
+        if(empty($_POST['phone'])){
+            $phoneError = "The phone field is required";
+        }else{
+            
+            if($phoneCheck != 1){
+                $phoneError = "Phone number must be a valid Myanmar telephone number (11 digits).e.g.09123456789";
+            }
+    
+        }
+    
+        if(empty($_POST['address'])){
+            $addError = "The address field is required";
+        }
+    
+        if(empty($_POST['password'])){
+            $passError = "The password field is required";
+        }else{
+         
+            if($passCheck != 1){
+                $passError = "Password must alphanumeric (@,_ and - are also allowed) and be 8-20 characters ";
+            }
+          
+        }
+
+}else{
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $phone = $_POST['phone'];
+    $address = $_POST['address'];
+    $password = password_hash($_POST['password'],PASSWORD_DEFAULT);
+
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE email=:email");
+
+    $stmt->bindValue(':email',$email);
+    $stmt->execute();
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($user) {
+      echo "<script>alert('Email duplicated')</script>";
+    }else{
+        if($_FILES['image']['name'] != null){
+            $fileName = $_FILES['image']['name'];
+            $fileExt = explode('.', $fileName);
+            $fileActualExt = strtolower(end($fileExt));
+            $allowed = ['jpg','jpeg','png'];
+            if(in_array($fileActualExt,$allowed)){
+                $image =    uniqid('',true) . "." . $fileName;
+                move_uploaded_file($_FILES['image']['tmp_name'],'admin/images/'.$image);
+                $stmt = $pdo->prepare("INSERT INTO users (name,email,phone,address,password,image) VALUES (:name,:email,:phone,:address,:password,:image)");
+               $result = $stmt->execute([
+                    ':name' => $name,
+                    ':email' => $email,
+                    ':phone' => $phone,
+                    ':address' => $address,
+                    ':password' => $password,
+                    ':image' => $image,
+        
+                ]);
+                if($result){
+                    echo "<script>alert('Successfully Register);window.location.href='login.php'</script>";
+                }
+                
+            }
+        }else{
+
+            $stmt = $pdo->prepare("INSERT INTO users (name,email,phone,address,password) VALUES (:name,:email,:phone,:address,:password)");
+            $result = $stmt->execute([
+                 ':name' => $name,
+                 ':email' => $email,
+                 ':phone' => $phone,
+                 ':address' => $address,
+                 ':password' => $password,
+              
+             ]);
+             if($result){
+                 echo "<script>alert('Successfully Register');window.location.href='login.php'</script>";
+             }
+        }
+    }
+    
+ 
+    }
 }
+
+
 
 ?>
 
@@ -100,37 +190,41 @@ if(isset($_POST['submit'])){
 	<section class="login_box_area section_gap mt-5">
 		<div class="container">
 			<div class="row">
-				<div class="col-lg-6">
-					<div class="login_box_img">
-						<img class="img-fluid" src="img2/login.jpg" alt="">
-						<div class="hover">
-							<h4>New to our website?</h4>
-							<p>There are advances being made in science and technology everyday, and a good example of this is the</p>
-							<a class="primary-btn" href="register.php">Create an Account</a>
-						</div>
-					</div>
-				</div>
-				<div class="col-lg-6">
+				
+				<div class="col-lg-12">
 					<div class="login_form_inner">
-						<h3>Log in to buy products</h3>
-						<form class="row login_form" action="login.php" method="post" id="contactForm" novalidate="novalidate">
+						<h3>Register Account</h3>
+						<form class="row login_form" action="register.php" method="post" id="contactForm" novalidate="novalidate" enctype="multipart/form-data">
 						<input type="hidden" name="_token" value="<?php echo $_SESSION['_token'] ?>">
-							<div class="col-md-12 form-group">
-								<input type="email" class="form-control" id="email"  name="email" placeholder="Email" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Email'">
+                            <div class="col-md-12 form-group">
+								<input type="text" class="form-control <?php if(!empty($nameError)){ ?>is-invalid<?php } ?>" id="name"  name="name" placeholder="Username" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Username'">
+                                <span style="color:red"><?php echo empty($nameError) ?  "" : $nameError  ?></span>
 							</div>
 							<div class="col-md-12 form-group">
-								<input type="password" class="form-control" id="password" name="password" placeholder="Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Password'" >
+								<input type="email" class="form-control <?php if(!empty($emailError)){ ?>is-invalid<?php } ?>" id="email"  name="email" placeholder="Email" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Email'">
+                                <span style="color:red"><?php echo empty($emailError) ?  "" : $emailError  ?></span>
 							</div>
-							<!-- <div class="col-md-12 form-group">
-								<div class="creat_account">
-									<input type="checkbox" id="f-option2" name="selector">
-									<label for="f-option2">Keep me logged in</label>
-								</div>
-							</div> -->
+                            <div class="col-md-12 form-group">
+								<input type="number" class="form-control <?php if(!empty($phoneError)){ ?>is-invalid<?php } ?>" id="phone"  name="phone" placeholder="Phone" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Phone'">
+                                <span style="color:red"><?php echo empty($phoneError) ?  "" : $phoneError ?></span>
+							</div>
+                            <div class="col-md-12 form-group">
+                                <textarea name="address" id="address" class="form-control <?php if(!empty($addError)){ ?>is-invalid<?php } ?>" cols="10" rows="5" placeholder="Address" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Address'"></textarea>
+                                <span style="color:red"><?php echo empty($addError) ?  "" : $addError ?></span>
+							</div>
 							<div class="col-md-12 form-group">
-								<button type="submit" name="submit" class="primary-btn">Log In</button>
-								
+								<input type="password" class="form-control <?php if(!empty($passError)){ ?>is-invalid<?php } ?>" id="password" name="password" placeholder="Password" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Password'" >
+                                <span style="color:red"><?php echo empty($passError) ?  "" : $passError ?></span>
 							</div>
+                            <div class="col-md-12 form-group">
+                                <label for="image" class="form-label">Image</label>
+                                <input type="file" name="image" class="form-control" id="image">
+                            </div>
+					
+							<div class="col-md-12 form-group">
+								<button type="submit" name="submit"  class="primary-btn">Register</button>
+							</div>
+                           
 						</form>
 					</div>
 				</div>

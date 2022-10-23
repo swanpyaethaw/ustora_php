@@ -38,28 +38,34 @@ if(isset($_POST['search'])){
         $pageno = 1;
     }
 
-    $num_of_rec = 3;
+    $num_of_rec = 1;
     $offset = ($pageno-1) * $num_of_rec;
 
+
+
     if(empty($_POST['search']) && empty($_COOKIE['search'])){
-        $rawStmt = $pdo->prepare("SELECT * FROM users  ORDER BY id DESC");
+        $rawStmt = $pdo->prepare("SELECT * FROM sale_order_detail GROUP BY product_id having SUM(quantity) > 3");
         $rawStmt->execute();
         $rawResult = $rawStmt->fetchAll();
+       
+       
 
         $total_pages = ceil(count($rawResult)/$num_of_rec);
 
-        $stmt = $pdo->prepare("SELECT * FROM users ORDER BY id DESC LIMIT $offset,$num_of_rec");
+        $stmt = $pdo->prepare("SELECT products.name as name,products.price as price   FROM sale_order_detail JOIN products ON sale_order_detail.product_id = products.id GROUP BY sale_order_detail.product_id having SUM(sale_order_detail.quantity) > 3 ORDER BY sale_order_detail.id DESC LIMIT $offset,$num_of_rec");
         $stmt->execute();
         $result = $stmt->fetchAll();
+        
+        
     }else{
         $search = isset($_POST['search']) ? $_POST['search'] : $_COOKIE['search'];
-        $rawStmt = $pdo->prepare("SELECT * FROM users WHERE name LIKE '%$search%'  ORDER BY id DESC");
+        $rawStmt = $pdo->prepare("SELECT * FROM sale_order_detail JOIN products ON sale_order_detail.product_id = products.id WHERE products.name LIKE '%$search%' GROUP BY sale_order_detail.product_id having SUM(sale_order_detail.quantity) > 3  LIMIT $offset,$num_of_rec");
         $rawStmt->execute();
         $rawResult = $rawStmt->fetchAll();
 
         $total_pages = ceil(count($rawResult)/$num_of_rec);
 
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE name LIKE '%$search%' ORDER BY id DESC LIMIT $offset,$num_of_rec");
+        $stmt = $pdo->prepare("SELECT products.name as name,products.price as price  FROM sale_order_detail JOIN products ON sale_order_detail.product_id = products.id WHERE products.name LIKE '%$search%' GROUP BY sale_order_detail.product_id having SUM(sale_order_detail.quantity) > 3 ORDER BY sale_order_detail.id DESC LIMIT $offset,$num_of_rec");
         $stmt->execute();
         $result = $stmt->fetchAll();
 
@@ -73,16 +79,13 @@ if(isset($_POST['search'])){
 
     <section class="section">
         <table class="table">
-            <a href="user_add.php" class="btn btn-success">Add Users</a>
+            <span>Best Selling Products</span>
             <thead>
                 <tr>
                     <th scope="col">#</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Phone</th>
-                    <th scope="col">Address</th>
-                    <th scope="col">Role</th>
-                    <th scope="col">Actions</th>
+                    <th scope="col">Product Name</th>
+                    <th scope="col">Price</th>
+                    
                 </tr>
             </thead>
             <tbody>
@@ -95,15 +98,8 @@ if(isset($_POST['search'])){
                 <tr>
                     <th scope="row"><?php echo $i ?></th>
                     <td><?php echo escape($value['name']) ?></td>
-                    <td><?php echo escape($value['email']) ?></td>
-                    <td><?php echo escape($value['phone']) ?></td>
-                    <td><?php echo escape($value['address']) ?></td>
-                    <td><?php echo escape($value['role']) ?></td>
-                    <td>
-                        <a href="user_edit.php?id=<?php echo $value['id'] ?>" class="btn btn-primary">Edit</a>
-                        <a href="user_delete.php?id=<?php echo $value['id'] ?>" class="btn btn-danger"
-                            onclick="return confirm('Are you sure want to delete?') ">Delete</a>
-                    </td>
+                    <td><?php echo escape($value['price']) ?></td>
+
 
                 </tr>
                 <?php $i++; }} ?>

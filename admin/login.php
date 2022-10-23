@@ -1,6 +1,8 @@
 <?php 
 session_start();
 require "config/config.php";
+require "config/common.php";
+
 
 
 if(isset($_POST['submit'])){
@@ -11,12 +13,13 @@ if(isset($_POST['submit'])){
   $stmt->execute([
     ":email" => $email
   ]);
-  $result = $stmt->fetch(PDO::FETCH_ASSOC);
-  if($result){
-    if($password === $result['password']){
-      $_SESSION['user_name'] = $result['name'];
-      $_SESSION['user_id'] = $result['id'];
-      $_SESSION['user_role'] = $result['role'];
+  $user = $stmt->fetch(PDO::FETCH_ASSOC);
+  if($user){
+    if(password_verify($password,$user['password'])){
+      $_SESSION['user_name'] = $user['name'];
+      $_SESSION['user_id'] = $user['id'];
+      $_SESSION['user_role'] = $user['role'];
+      $_SESSION['user_image'] = $user['image'];
       $_SESSION['logged_in'] = time();
       header('location:index.php');
     }
@@ -96,7 +99,7 @@ if(isset($_POST['submit'])){
                   </div>
 
                   <form class="row g-3 needs-validation" action="login.php" method="POST" novalidate>
-
+                  <input type="hidden" name="_token" value="<?php echo $_SESSION['_token'] ?>">
                     <div class="col-12">
                       <label for="Email" class="form-label">Email</label>
                       <div class="input-group has-validation">

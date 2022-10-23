@@ -38,29 +38,48 @@ if(isset($_POST['search'])){
         $pageno = 1;
     }
 
-    $num_of_rec = 3;
+    $num_of_rec = 2;
     $offset = ($pageno-1) * $num_of_rec;
 
+    $currentDate = date('Y-m-d');
+  
+    $fromDate = date('Y-m-d',strtotime('+1 day' . $currentDate));
+    $toDate = date('Y-m-d',strtotime('-30 day' . $currentDate));
+
+
     if(empty($_POST['search']) && empty($_COOKIE['search'])){
-        $rawStmt = $pdo->prepare("SELECT * FROM users  ORDER BY id DESC");
-        $rawStmt->execute();
+        $rawStmt = $pdo->prepare("SELECT *  FROM sale_orders  WHERE  order_date < :from AND order_date >= :to ");
+        $rawStmt->execute([
+            ':from' => $fromDate,
+            ':to' => $toDate
+        ]);
         $rawResult = $rawStmt->fetchAll();
 
         $total_pages = ceil(count($rawResult)/$num_of_rec);
 
-        $stmt = $pdo->prepare("SELECT * FROM users ORDER BY id DESC LIMIT $offset,$num_of_rec");
-        $stmt->execute();
+        $stmt = $pdo->prepare("SELECT users.name as name,sale_orders.total_amount as total_amount,sale_orders.order_date as order_date FROM sale_orders JOIN users ON sale_orders.customer_id = users.id WHERE  sale_orders.order_date < :from AND sale_orders.order_date >= :to  ORDER BY sale_orders.id DESC LIMIT $offset,$num_of_rec");
+        $stmt->execute([
+            ':from' => $fromDate,
+            ':to' => $toDate
+        ]);
         $result = $stmt->fetchAll();
+        
     }else{
         $search = isset($_POST['search']) ? $_POST['search'] : $_COOKIE['search'];
-        $rawStmt = $pdo->prepare("SELECT * FROM users WHERE name LIKE '%$search%'  ORDER BY id DESC");
-        $rawStmt->execute();
+        $rawStmt = $pdo->prepare("SELECT *   FROM sale_orders JOIN users ON sale_orders.customer_id = users.id WHERE name LIKE '%$search%' AND sale_orders.order_date < :from AND sale_orders.order_date >= :to ");
+        $rawStmt->execute([
+            ':from' => $fromDate,
+            ':to' => $toDate
+        ]);
         $rawResult = $rawStmt->fetchAll();
 
         $total_pages = ceil(count($rawResult)/$num_of_rec);
 
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE name LIKE '%$search%' ORDER BY id DESC LIMIT $offset,$num_of_rec");
-        $stmt->execute();
+        $stmt = $pdo->prepare("SELECT users.name as name,sale_orders.total_amount as total_amount,sale_orders.order_date as order_date   FROM sale_orders JOIN users ON sale_orders.customer_id = users.id WHERE name LIKE '%$search%' AND sale_orders.order_date < :from  AND sale_orders.order_date >= :to ORDER BY sale_orders.id DESC LIMIT $offset,$num_of_rec");
+        $stmt->execute([
+            ':from' => $fromDate,
+            ':to' => $toDate
+        ]);
         $result = $stmt->fetchAll();
 
     }
@@ -73,16 +92,14 @@ if(isset($_POST['search'])){
 
     <section class="section">
         <table class="table">
-            <a href="user_add.php" class="btn btn-success">Add Users</a>
+            <span>Monthly Report</span>
             <thead>
                 <tr>
                     <th scope="col">#</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Phone</th>
-                    <th scope="col">Address</th>
-                    <th scope="col">Role</th>
-                    <th scope="col">Actions</th>
+                    <th scope="col">Customer Name</th>
+                    <th scope="col">Total Amount</th>
+                    <th scope="col">Order Date</th>
+                    
                 </tr>
             </thead>
             <tbody>
@@ -95,15 +112,8 @@ if(isset($_POST['search'])){
                 <tr>
                     <th scope="row"><?php echo $i ?></th>
                     <td><?php echo escape($value['name']) ?></td>
-                    <td><?php echo escape($value['email']) ?></td>
-                    <td><?php echo escape($value['phone']) ?></td>
-                    <td><?php echo escape($value['address']) ?></td>
-                    <td><?php echo escape($value['role']) ?></td>
-                    <td>
-                        <a href="user_edit.php?id=<?php echo $value['id'] ?>" class="btn btn-primary">Edit</a>
-                        <a href="user_delete.php?id=<?php echo $value['id'] ?>" class="btn btn-danger"
-                            onclick="return confirm('Are you sure want to delete?') ">Delete</a>
-                    </td>
+                    <td><?php echo escape($value['total_amount']) ?></td>
+                    <td><?php echo escape($value['order_date']) ?></td>
 
                 </tr>
                 <?php $i++; }} ?>

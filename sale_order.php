@@ -1,4 +1,11 @@
+<?php 
 
+session_start();
+require "config/config.php";
+
+
+
+?>
 <!DOCTYPE html>
 <!--
 	ustora by freshdesignweb.com
@@ -36,68 +43,18 @@
     <![endif]-->
   </head>
   <body>
-   
-    <div class="header-area">
+    <div class="product-big-title-area">
         <div class="container">
             <div class="row">
-                <div class="col-md-8">
-                    <div class="user-menu">
-                    <?php if(!empty($_SESSION['user_id'])) : ?>
-                        <ul>
-                            <li><a href="logout.php"><i class="fa fa-user"></i>Logout</a></li>
-                        </ul>
-                        <?php endif ?>
-                        <?php if(empty($_SESSION['user_id'])) : ?>
-                        <ul>
-                            <li><a href="register.php"><i class="fa fa-user"></i> Register</a></li>
-                            <li><a href="login.php"><i class="fa fa-user"></i> Login</a></li>
-                        </ul>
-                        <?php endif ?>
+                <div class="col-md-12">
+                    <div class="product-bit-title text-center">
+                        <h2>Shopping Cart</h2>
                     </div>
                 </div>
-                
-                
             </div>
         </div>
-    </div> <!-- End header area -->
-    
-    <div class="site-branding-area">
-        <div class="container">
-            <div class="row">
-                <div class="col-sm-6">
-                    <div class="logo">
-                        <h1><a href="./"><img src="img/logo.png"></a></h1>
-                    </div>
-                </div>
-               
-                <?php 
-                $cart = 0;
-                $total = 0;
+    </div>
 
-                if(isset($_SESSION['cart'])){
-                    foreach($_SESSION['cart'] as $key=>$qty){
-                        $id = str_replace('id','',$key);
-                        $stmt = $pdo->prepare("SELECT * FROM products WHERE id=$id");
-                        $stmt->execute();
-                        $result = $stmt->fetch();
-                        $total += $result['price'] * $qty;
-                        $cart += $qty;
-                    }
-                }
-                
-                
-                ?>
-                 <?php if(!empty($_SESSION['user_id'])) : ?>
-                <div class="col-sm-6">
-                    <div class="shopping-item">
-                        <a href="cart.php">Cart - <span class="cart-amunt"><?php echo $total ?></span> <i class="fa fa-shopping-cart"></i> <span class="product-count"><?php echo $cart ?></span></a>
-                    </div>
-                </div>
-                <?php endif ?>
-            </div>
-        </div>
-    </div> <!-- End site branding area -->
-    
     <div class="mainmenu-area">
         <div class="container">
             <div class="row">
@@ -114,7 +71,7 @@
                         <li class="active"><a href="index.php">Home</a></li>
                         <li><a href="shop.php">Shop page</a></li>
                         <li><a href="cart.php">Cart</a></li>
-                        
+                       
                     </ul>
                     <?php 
 
@@ -135,3 +92,71 @@
             </div>
         </div>
     </div> <!-- End mainmenu area -->
+
+    <!--================Order Details Area =================-->
+	<section class="order_details section_gap" style="padding:50px 0 ;text-align:center">
+		<div class="container">
+			<h3 class="title_confirmation">Thank you. Your order has been received.</h3>
+			
+		</div>
+	</section>
+	<!--================End Order Details Area =================-->
+    
+    <?php 
+    $customerID = $_SESSION['user_id'];
+    $total = 0;
+    if(isset($_SESSION['cart'])){
+        foreach($_SESSION['cart'] as $key=>$qty){
+            $id = str_replace('id','',$key);
+            $stmt = $pdo->prepare("SELECT * FROM products WHERE id=$id");
+            $stmt->execute();
+            $result = $stmt->fetch();
+            $total += $result['price'] * $qty;
+        }
+
+            $stmt = $pdo->prepare("INSERT INTO sale_orders (customer_id,total_amount) VALUES (:id,:total)");
+            $stmt->execute([
+                ':id' => $id,
+                ':total' => $total
+
+            ]);
+
+            $saleOrderID = $pdo->lastInsertId();
+
+            foreach($_SESSION['cart'] as $key=>$qty){
+                $id = str_replace('id','',$key);
+
+                $stmt = $pdo->prepare("INSERT INTO sale_order_detail (sale_order_id,product_id,quantity) VALUES (:id,:pid,:quantity)");
+                $result = $stmt->execute([
+                    ':id' => $saleOrderID,
+                    ':pid' => $id,
+                    ':quantity' => $qty
+                ]);
+
+                if($result){
+                    $pStmt = $pdo->prepare("SELECT * FROM products WHERE id=$id");
+                    $pStmt->execute();
+                    $pResult = $pStmt->fetch();
+
+                    $updateQty = $pResult['quantity'] - $qty;
+
+                    $updateStmt = $pdo->prepare("UPDATE products SET quantity=:updateQty WHERE id=$id");
+                    $updateStmt->execute([
+                        ':updateQty' => $updateQty
+                    ]);
+                    $updateResult = $updateStmt->fetch();
+
+
+                }
+
+            
+            }
+
+            unset($_SESSION['cart']);
+      
+    }
+    
+    ?>
+
+
+   <?php include "footer.php" ?>

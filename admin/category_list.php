@@ -42,24 +42,24 @@ if(isset($_POST['search'])){
     $offset = ($pageno-1) * $num_of_rec;
 
     if(empty($_POST['search']) && empty($_COOKIE['search'])){
-        $rawStmt = $pdo->prepare("SELECT * FROM users  ORDER BY id DESC");
+        $rawStmt = $pdo->prepare("SELECT * FROM categories  ORDER BY id DESC");
         $rawStmt->execute();
         $rawResult = $rawStmt->fetchAll();
 
         $total_pages = ceil(count($rawResult)/$num_of_rec);
 
-        $stmt = $pdo->prepare("SELECT * FROM users ORDER BY id DESC LIMIT $offset,$num_of_rec");
+        $stmt = $pdo->prepare("SELECT * FROM categories ORDER BY id DESC LIMIT $offset,$num_of_rec");
         $stmt->execute();
         $result = $stmt->fetchAll();
     }else{
         $search = isset($_POST['search']) ? $_POST['search'] : $_COOKIE['search'];
-        $rawStmt = $pdo->prepare("SELECT * FROM users WHERE name LIKE '%$search%'  ORDER BY id DESC");
+        $rawStmt = $pdo->prepare("SELECT * FROM categories WHERE name LIKE '%$search%'  ORDER BY id DESC");
         $rawStmt->execute();
         $rawResult = $rawStmt->fetchAll();
 
         $total_pages = ceil(count($rawResult)/$num_of_rec);
 
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE name LIKE '%$search%' ORDER BY id DESC LIMIT $offset,$num_of_rec");
+        $stmt = $pdo->prepare("SELECT * FROM categories WHERE name LIKE '%$search%' ORDER BY id DESC LIMIT $offset,$num_of_rec");
         $stmt->execute();
         $result = $stmt->fetchAll();
 
@@ -73,15 +73,12 @@ if(isset($_POST['search'])){
 
     <section class="section">
         <table class="table">
-            <a href="user_add.php" class="btn btn-success">Add Users</a>
+            <a href="category_add.php" class="btn btn-success">Add Categories</a>
             <thead>
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Name</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Phone</th>
-                    <th scope="col">Address</th>
-                    <th scope="col">Role</th>
+                    <th scope="col">Description</th>
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
@@ -95,13 +92,10 @@ if(isset($_POST['search'])){
                 <tr>
                     <th scope="row"><?php echo $i ?></th>
                     <td><?php echo escape($value['name']) ?></td>
-                    <td><?php echo escape($value['email']) ?></td>
-                    <td><?php echo escape($value['phone']) ?></td>
-                    <td><?php echo escape($value['address']) ?></td>
-                    <td><?php echo escape($value['role']) ?></td>
+                    <td><?php echo escape($value['description']) ?></td>
                     <td>
-                        <a href="user_edit.php?id=<?php echo $value['id'] ?>" class="btn btn-primary">Edit</a>
-                        <a href="user_delete.php?id=<?php echo $value['id'] ?>" class="btn btn-danger"
+                        <a href="category_edit.php?id=<?php echo $value['id'] ?>" class="btn btn-primary">Edit</a>
+                        <a href="category_delete.php?id=<?php echo $value['id'] ?>" class="btn btn-danger"
                             onclick="return confirm('Are you sure want to delete?') ">Delete</a>
                     </td>
 
