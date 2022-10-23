@@ -10,23 +10,17 @@ if(isset($_POST['submit_review'])){
     }else{
         $review = $_POST['review'];
         $pid = $_POST['product_id'];
+        $rating = $_POST['rating'];
         $uid = $_SESSION['user_id'];
-        // $rating = $_POST['rating'];
-
-        $rvsStmt = $pdo->prepare("INSERT INTO product_review (user_id,product_id,review) VALUES (:uid,:pid,:review)");
+        $rvsStmt = $pdo->prepare("INSERT INTO product_review (user_id,product_id,review,rating) VALUES (:uid,:pid,:review,:rating)");
         $rvsStmt->execute([
             ':uid' => $uid,
             ':pid' => $pid,
-            ':review' => $review
+            ':review' => $review,
+            ':rating' => $rating ? $rating: NULL
         ]);
-        
-
     }
 }
-
-
-
-
 ?>
 
 
@@ -54,14 +48,16 @@ if(isset($_POST['submit_review'])){
         <div class="row">
 
             <?php 
-                
-                    $stmt = $pdo->prepare("SELECT * FROM products WHERE id=" . $_GET['id']);
-                    $stmt->execute();
-                    $result = $stmt->fetch();
-                
-                
-                
-                ?>
+                $stmt = $pdo->prepare("SELECT * FROM products WHERE id=" . $_GET['id']);
+                $stmt->execute();
+                $result = $stmt->fetch();
+
+
+                $reviews = $pdo->prepare("SELECT * FROM product_review WHERE user_id =". $_SESSION['user_id']." AND product_id=" . $_GET['id']);
+                $reviews->execute();
+                $reviews = $reviews->fetchAll();
+                $reviewCount = 0;
+            ?>
             <div class="col-md-12">
                 <div class="product-content-right">
 
@@ -110,14 +106,17 @@ if(isset($_POST['submit_review'])){
                                     <ul class="product-tab" role="tablist">
                                         <li role="presentation" class="active"><a href="#home" aria-controls="home"
                                                 role="tab" data-toggle="tab">Description</a></li>
+                                        <?php if ($reviewCount < 1) { ?>
                                         <li role="presentation"><a href="#profile" aria-controls="profile" role="tab"
                                                 data-toggle="tab">Reviews</a></li>
+                                        <?php } ?>
                                     </ul>
                                     <div class="tab-content">
                                         <div role="tabpanel" class="tab-pane fade in active" id="home">
                                             <h2>Product Description</h2>
                                             <p><?php echo $result['description'] ?></p>
                                         </div>
+                                        <?php if ($reviewCount < 1) { ?>
                                         <div role="tabpanel" class="tab-pane fade" id="profile">
                                             <h2>Reviews</h2>
                                             <div class="submit-review">
@@ -129,12 +128,14 @@ if(isset($_POST['submit_review'])){
                                                             value="<?php echo $_SESSION['_token'] ?>">
                                                         <input type="hidden" name="product_id"
                                                             value="<?php echo $result['id'] ?>">
+                                                            <input type="hidden" name="rating" id="rating"
+                                                            value="">
                                                         <div class="rating-wrap-post">
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
-                                                            <i class="fa fa-star"></i>
+                                                            <i data-value="1" class="fa fa-star rating"></i>
+                                                            <i data-value="2" class="fa fa-star rating"></i>
+                                                            <i data-value="3" class="fa fa-star rating"></i>
+                                                            <i data-value="4" class="fa fa-star rating"></i>
+                                                            <i data-value="5" class="fa fa-star rating"></i>
                                                         </div>
                                                 </div>
                                                 <p><label for="review">Your review</label> <textarea name="review" id=""
@@ -144,6 +145,7 @@ if(isset($_POST['submit_review'])){
 
                                             </div>
                                         </div>
+                                        <?php } ?>
                                     </div>
                                 </div>
 
@@ -182,16 +184,20 @@ if(isset($_POST['submit_review'])){
                             </div>
                             <!-- col-2 -->
 
+                            <?php if ($value['rating'] > 0) { ?>
                             <div style="display:flex;align-items:baseline;gap:1em;margin-bottom:1em;">
                                 <div style="display:flex;">
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star"></i>
-                                    <i class="fa fa-star"></i>
+                                    <?php for($i = 0; $i < 5; $i++) { ?>
+                                        <?php if($i < $value['rating']) { ?>
+                                            <i class="fa fa-star" style="color: gold"></i>
+                                        <?php } else { ?>
+                                            <i class="fa fa-star"></i>
+                                        <?php } ?> 
+                                    <?php } ?>
                                 </div>
                                 <span><?php echo $value['updated_at'] ?></span>
                             </div>
+                            <?php } ?>
                             <!-- col-3 -->
                             <p style="margin-bottom: 1em;"><?php echo $value['review'] ?></p>
                             <?php if($_SESSION['user_id'] === $userResult['id']) : ?>
@@ -250,3 +256,25 @@ if(isset($_POST['submit_review'])){
 
 
 <?php include "footer.php" ?>
+<script type="text/javascript">
+    $(function() {
+        var rating = 0
+        $(document).on('click', '.rating', function() {
+            if (rating !== $(this).data('value')) {
+                var value = $(this).data('value')
+                $('.rating').each(function() {
+                    if ($(this).data('value') <= value) $(this).css('color','gold')
+                    else $(this).css('color','black')
+                })
+                rating = value
+                $('#rating').val(value)
+            } else {
+                $('.rating').each(function() {
+                    $(this).css('color','black')
+                })
+                rating = 0
+                $('#rating').val(value)
+            }
+        })
+    })
+</script>
