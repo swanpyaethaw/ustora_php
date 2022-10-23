@@ -86,7 +86,7 @@ if(isset($_POST['submit_review'])){
                                     <input type="hidden" name="id" value="<?php echo $result['id'] ?>">
                                     <input type="hidden" name="_token" value="<?php echo $_SESSION['_token'] ?>">
                                     <div class="quantity">
-                                        <input type="number" size="4" class="input-text qty text" title="Qty"
+                                        <input type="number" size="4" class="input-text qty text" value="1" title="Qty"
                                             name="quantity" min="1" step="1">
                                     </div>
                                     <button class="add_to_cart_button" name="submit" type="submit">Add to cart</button>
@@ -153,6 +153,65 @@ if(isset($_POST['submit_review'])){
                         </div>
                     </div>
                     <!-- Review Card -->
+
+                    <?php
+                        $rvStmt1 = $pdo->prepare("SELECT COUNT(*) as total, SUM(rating) as rating FROM product_review WHERE product_id=" . $_GET['id']);
+                        $rvStmt1->execute();
+                        $rvStmt1 = $rvStmt1->fetch();
+                        $pdrating = 0;
+                        if ($rvStmt1['total'] > 0) {
+                            $pdrating = round(($rvStmt1['rating']/($rvStmt1['total'] * 5)) * 100);
+                        }
+                        $star =  5 * ($pdrating/100);
+                        $one = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 1 GROUP BY rating");
+                        $one->execute();
+                        $one = $one->fetch();
+
+                        $two = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 2 GROUP BY rating");
+                        $two->execute();
+                        $two = $two->fetch();
+
+                        $three = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 3 GROUP BY rating");
+                        $three->execute();
+                        $three = $three->fetch();
+
+                        $four = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 4 GROUP BY rating");
+                        $four->execute();
+                        $four = $four->fetch();
+
+                        $five = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 5 GROUP BY rating");
+                        $five->execute();
+                        $five = $five->fetch();
+                    ?>
+                    <div class="all">
+                        <p class="total">Star Ratio: <?php echo $star ? number_format($star, 1): 0 ?></p>
+                        <p class="total">Total Users: <?php echo $rvStmt1['total'] ?></p>
+                    </div>
+                    <div class="rating">
+                        <ul style="list-style-type: none">
+                            <?php for ($i=0; $i<5; $i++) { ?>
+                            <li>
+                                <span><?php echo 5-$i ?></span> => 
+                                <?php  
+                                    $myarray = [
+                                        ['name' => 1, 'value' => $one],
+                                        ['name' => 2, 'value' => $two],
+                                        ['name' => 3, 'value' => $three],
+                                        ['name' => 4, 'value' => $four],
+                                        ['name' => 5, 'value' => $five],
+                                    ];
+                                    $index = array_search(5-$i, array_column($myarray, 'name'));
+                                    if ($myarray[$index]['value'] && $myarray[$index]['value']['rating'] == 5-$i && $myarray[$index]['value']['rating_count'] > 0) {
+                                        echo $myarray[$index]['value']['rating_count'];
+                                    } else {
+                                        echo 0;
+                                    }
+                                ?>
+                            </li>
+                            <?php } ?>
+                        </ul>
+                    </div>
+
                     <?php 
                     
                     $rvStmt = $pdo->prepare("SELECT * FROM product_review WHERE product_id=".$_GET['id']);

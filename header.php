@@ -80,8 +80,8 @@
                         $stmt = $pdo->prepare("SELECT * FROM products WHERE id=$id");
                         $stmt->execute();
                         $result = $stmt->fetch();
-                        $total += $result['price'] * $qty;
-                        $cart += $qty;
+                        $total += $result['price'] ?? 0 * $qty;
+                        $cart += $qty ?? 0;
                     }
                 }
                 
