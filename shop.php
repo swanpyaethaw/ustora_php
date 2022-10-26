@@ -22,8 +22,6 @@ require "config/common.php";
 
     $num_of_rec = 5;
     $offset = ($pageno-1) * $num_of_rec;
-
-
     if(empty($_POST['search']) && empty($_COOKIE['search'])){
         $rawStmt = $pdo->prepare("SELECT * FROM products WHERE quantity > 0");
         $rawStmt->execute();
@@ -33,8 +31,7 @@ require "config/common.php";
     
         $stmt = $pdo->prepare("SELECT * FROM products WHERE quantity > 0 ORDER BY id DESC LIMIT $offset,$num_of_rec");
         $stmt->execute();
-        $result = $stmt->fetchAll();
-      
+        $result1 = $stmt->fetchAll();
     }else{
         $search = isset($_POST['search']) ? $_POST['search'] : $_COOKIE['search'];
         $rawStmt = $pdo->prepare("SELECT * FROM products WHERE name LIKE '%$search%' AND quantity > 0");
@@ -45,10 +42,8 @@ require "config/common.php";
     
         $stmt = $pdo->prepare("SELECT * FROM products WHERE name LIKE '%$search%' AND quantity > 0 ORDER BY id DESC LIMIT $offset,$num_of_rec");
         $stmt->execute();
-        $result = $stmt->fetchAll();
+        $result1 = $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
-  
-
 ?>
 
 <?php include "header.php" ?>
@@ -71,12 +66,8 @@ require "config/common.php";
         <div class="container">
             <div class="row">
                 <?php 
-                
-                foreach($result as $key=>$value) {
-                  
-              
-                    
-                    ?>
+                foreach($result1 as $key => $value) {
+                ?>
                 <div class="col-md-3 col-sm-6">
                     <div class="single-shop-product">
                         <div class="product-upper">
@@ -92,8 +83,7 @@ require "config/common.php";
                         </div>                       
                     </div>
                 </div>
-                <?php   } ?>
-            
+                <?php   }  ?>
             </div>
             
             <div class="row">

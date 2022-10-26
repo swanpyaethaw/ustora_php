@@ -79,8 +79,8 @@
                         $id = str_replace('id','',$key);
                         $cartStmt = $pdo->prepare("SELECT * FROM products WHERE id=$id");
                         $cartStmt->execute();
-                        $catResult = $cartStmt->fetch();
-                        $total += $catResult['price'] * $qty;
+                        $cartResult = $cartStmt->fetch();
+                        $total += $cartResult['price'] * $qty;
                         $cart += $qty;
                     }
                 }
