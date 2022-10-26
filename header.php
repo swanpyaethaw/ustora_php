@@ -77,10 +77,10 @@
                 if(isset($_SESSION['cart'])){
                     foreach($_SESSION['cart'] as $key=>$qty){
                         $id = str_replace('id','',$key);
-                        $stmt = $pdo->prepare("SELECT * FROM products WHERE id=$id");
-                        $stmt->execute();
-                        $result = $stmt->fetch();
-                        $total += $result['price'] * $qty;
+                        $cartStmt = $pdo->prepare("SELECT * FROM products WHERE id=$id");
+                        $cartStmt->execute();
+                        $catResult = $cartStmt->fetch();
+                        $total += $catResult['price'] * $qty;
                         $cart += $qty;
                     }
                 }
@@ -114,7 +114,6 @@
                         <li class="active"><a href="index.php">Home</a></li>
                         <li><a href="shop.php">Shop page</a></li>
                         <li><a href="cart.php">Cart</a></li>
-                        
                     </ul>
                     <?php 
 
@@ -124,7 +123,7 @@
                     
                     ?>
 
-                   <?php if($page == "shop.php") : ?>
+                   <?php if($page == "shop.php" || $page == "top_seller_view.php" || $page == "top_new.php") : ?>
                     <form class="form-inline" action="shop.php" method="POST">
                     <input type="hidden" name="_token" value="<?php echo $_SESSION['_token'] ?>">
       <input class="form-control mr-sm-2" name="search" type="search" placeholder="Search" aria-label="Search">

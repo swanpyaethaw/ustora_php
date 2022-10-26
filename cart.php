@@ -89,7 +89,7 @@ if(empty($_SESSION['user_id']) && empty($_SESSION['logged_in'])){
                                                 <input type="hidden" name="_token" value="<?php echo $_SESSION['_token'] ?>">
                                                     <input type="hidden" name="id" value="<?php echo $result['id'] ?>">
                                                     
-                                                    <input type="number" name="quantity" size="4" class="input-text qty text" title="Qty" value="0" min="0" step="1">
+                                                    <input type="number" name="quantity" size="4" class="input-text qty text" title="Qty" value="<?php echo $qty ?>" min="1" step="1">
                                                     <input type="submit" name="update_submit" value="Update Cart"  class="button">
                                                     </form>
                                                    

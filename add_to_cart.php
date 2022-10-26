@@ -13,6 +13,8 @@ if(isset($_POST['submit'])){
 
     if($qty > $result['quantity']){
         echo "<script>alert('Not enough stock');window.location.href='product_detail.php?id=$id'</script>";
+    }elseif($qty <= 0){
+        echo "<script>alert('Quantity must be at least one');window.location.href='product_detail.php?id=$id'</script>";
     }else{
         if(isset($_SESSION['cart']['id'.$id])){
             $_SESSION['cart']['id'.$id] += $qty;
@@ -21,7 +23,9 @@ if(isset($_POST['submit'])){
         }
         header('location:cart.php');
     }
-}
+        
+    }
+
 
 if(isset($_GET['cid'])){
 
@@ -35,7 +39,7 @@ if(isset($_GET['cid'])){
     
 
     if($qty > $result['quantity']){
-        echo "<script>alert('Not enough stock');window.location.href='index.php'</script>";
+        echo "<script>alert('Not enough stock');window.location.href='shop.php'</script>";
     }else{
         if(isset($_SESSION['cart']['id'.$id])){
             $_SESSION['cart']['id'.$id] += $qty;
@@ -49,15 +53,17 @@ if(isset($_GET['cid'])){
 if(isset($_POST['update_submit'])){
     $id = $_POST['id'];
     $qty = $_POST['quantity'];
-    $update_qty = $_SESSION['cart']['id'.$id] + $qty;
-
+   
     $stmt = $pdo->prepare("SELECT * FROM products WHERE id=$id");
     $stmt->execute();
     $result = $stmt->fetch();
 
-    if($update_qty > $result['quantity']){
+    if($qty > $result['quantity']){
         echo "<script>alert('Not enough stock');window.location.href='cart.php'</script>";
+    }elseif($qty <= 0){
+        echo "<script>alert('Quantity must be at least one');window.location.href='cart.php'</script>";
     }else{
+        unset($_SESSION['cart']['id'.$id]);
         if(isset($_SESSION['cart']['id'.$id])){
             $_SESSION['cart']['id'.$id] += $qty;
         }else{
@@ -66,3 +72,24 @@ if(isset($_POST['update_submit'])){
         header('location:cart.php');
     }
 }
+
+// if(isset($_POST['update_submit'])){
+//     $id = $_POST['id'];
+//     $qty = $_POST['quantity'];
+
+//     $stmt = $pdo->prepare("SELECT * FROM products WHERE id=$id");
+//     $stmt->execute();
+//     $result = $stmt->fetch();
+
+//     $update_qty = $_SESSION['cart']['id'.$id] + $qty;
+
+//     if($update_qty > $result['quantity']){
+//         echo "<script>alert('Not enough stock');window.location.href='cart.php'</script>";
+//     }elseif($update_qty <= 0){
+//         echo "<script>alert('Quantity must be at least one');window.location.href='cart.php'</script>";
+//     }else{
+//         $_SESSION['cart']['id'.$id] = $update_qty;
+//         header('location:cart.php');
+//     }
+
+// }

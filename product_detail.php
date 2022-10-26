@@ -4,6 +4,32 @@ session_start();
 require "config/config.php";
 require "config/common.php";
 
+if(empty($_SESSION['view'][$_GET['id']])){
+    $_SESSION['view'][$_GET['id']] = $_GET['id'];
+}
+
+echo "<pre>";
+print_r($_SESSION['view']);
+
+print_r(array_slice($_SESSION['view'],-3,3));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if(isset($_POST['submit_review'])){
     if(empty($_SESSION['user_id'])){
         echo "<script>alert('Please Log in to submit review');window.location.href='login.php'</script>";
@@ -11,7 +37,7 @@ if(isset($_POST['submit_review'])){
         $review = $_POST['review'];
         $pid = $_POST['product_id'];
         $uid = $_SESSION['user_id'];
-        // $rating = $_POST['rating'];
+       
 
         $rvsStmt = $pdo->prepare("INSERT INTO product_review (user_id,product_id,review) VALUES (:uid,:pid,:review)");
         $rvsStmt->execute([
@@ -92,6 +118,7 @@ if(isset($_POST['submit_review'])){
                                     <div class="quantity">
                                         <input type="number" size="4" class="input-text qty text" title="Qty"
                                             name="quantity" min="1" step="1">
+                                           
                                     </div>
                                     <button class="add_to_cart_button" name="submit" type="submit">Add to cart</button>
                                 </form>
