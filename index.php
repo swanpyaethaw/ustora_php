@@ -137,17 +137,46 @@ require "config/common.php";
                             $pStmt = $pdo->prepare("SELECT * FROM products WHERE id=" . $value['product_id']);
                             $pStmt->execute();
                             $pResult = $pStmt->fetch();
+
+                            $rvStmt1 = $pdo->prepare("SELECT COUNT(*) as total, SUM(rating) as rating FROM product_review WHERE product_id=" . $value['product_id']);
+                            $rvStmt1->execute();
+                            $rvResult1 = $rvStmt1->fetch(\PDO::FETCH_ASSOC);
+                            $pdrating = 0;
+                            if ($rvResult1['total'] > 0) {
+                                $pdrating = round(($rvResult1['rating']/($rvResult1['total'] * 5)) * 100);
+                            }
+                            $mypercent = 0;
+
+                            if ($pdrating > 80 && $pdrating <= 100){
+                                $mypercent = 5;
+                            } else if ($pdrating > 60 && $pdrating <= 80){
+                                $mypercent = 4;
+                            } else if ($pdrating > 40 && $pdrating <= 60){
+                                $mypercent = 3;
+                            } else if ($pdrating > 20 && $pdrating <= 40){
+                                $mypercent = 2;
+                            } else if ($pdrating > 0 && $pdrating <= 20){
+                                $mypercent = 1;
+                            } else {
+                                $mypercent = 0;
+                            }
                             ?>
                     <div class="single-wid-product">
-                        <a href="product_detail.php?id=<?php echo $viewResult['id'] ?>"><img src="admin/images/<?php echo $pResult['image'] ?>" alt=""
+                        <a href="product_detail.php?id=<?php echo $pResult['id'] ?>"><img src="admin/images/<?php echo $pResult['image'] ?>" alt=""
                                 class="product-thumb"></a>
-                        <h2><a href="product_detail.php?id=<?php echo $viewResult['id'] ?>"><?php echo $pResult['name'] ?></a></h2>
+                        <h2><a href="product_detail.php?id=<?php echo $pResult['id'] ?>"><?php echo $pResult['name'] ?></a></h2>
                         <div class="product-wid-rating">
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
+                        <?php if ($mypercent > 0) { ?>
+                                <div class="product-wid-rating">
+                                    <?php for($i = 0; $i < 5; $i++) { ?>
+                                        <?php if($i < $mypercent) { ?>
+                                            <i class="fa fa-star" style="color: gold"></i>
+                                        <?php } else { ?>
+                                            <i class="fa fa-star" style="color: black"></i>
+                                        <?php } ?> 
+                                    <?php } ?>
+                                </div>
+                            <?php } ?>
                         </div>
                         <div class="product-wid-price">
                             <ins>$<?php echo $pResult['price'] ?></ins>
@@ -160,7 +189,8 @@ require "config/common.php";
             </div>
 
             <?php 
-                if(isset($_SESSION['view'])):
+                if(isset($_SESSION['user_id'])){
+                    if(isset($_SESSION['view'][$_SESSION['user_id']])){
             ?>
             <!-- Recently View -->
             <div class="col-md-4">
@@ -170,12 +200,35 @@ require "config/common.php";
                     <a href="recent_view.php" class="wid-view-more">View All</a>
                     <?php 
                     
-                    $viewSlice = array_slice($_SESSION['view'],-3,3);
+                    $viewSlice = array_slice($_SESSION['view'][$_SESSION['user_id']],-3,3);
                   
                     foreach($viewSlice as $key=>$value){
                         $viewStmt = $pdo->prepare("SELECT * FROM products WHERE id=$value");
                         $viewStmt->execute();
                         $viewResult = $viewStmt->fetch();
+
+                        $rvStmt1 = $pdo->prepare("SELECT COUNT(*) as total, SUM(rating) as rating FROM product_review WHERE product_id=" . $value);
+                        $rvStmt1->execute();
+                        $rvResult1 = $rvStmt1->fetch(\PDO::FETCH_ASSOC);
+                        $pdrating = 0;
+                        if ($rvResult1['total'] > 0) {
+                            $pdrating = round(($rvResult1['rating']/($rvResult1['total'] * 5)) * 100);
+                        }
+                        $mypercent = 0;
+
+                        if ($pdrating > 80 && $pdrating <= 100){
+                            $mypercent = 5;
+                        } else if ($pdrating > 60 && $pdrating <= 80){
+                            $mypercent = 4;
+                        } else if ($pdrating > 40 && $pdrating <= 60){
+                            $mypercent = 3;
+                        } else if ($pdrating > 20 && $pdrating <= 40){
+                            $mypercent = 2;
+                        } else if ($pdrating > 0 && $pdrating <= 20){
+                            $mypercent = 1;
+                        } else {
+                            $mypercent = 0;
+                        }
                   
                     
                     
@@ -186,13 +239,18 @@ require "config/common.php";
                         <h2><a
                                 href="product_detail.php?id=<?php echo $viewResult['id'] ?>"><?php echo $viewResult['name'] ?></a>
                         </h2>
-                        <div class="product-wid-rating">
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                        </div>
+                      
+                        <?php if ($mypercent > 0) { ?>
+                                <div class="product-wid-rating">
+                                    <?php for($i = 0; $i < 5; $i++) { ?>
+                                        <?php if($i < $mypercent) { ?>
+                                            <i class="fa fa-star" style="color: gold"></i>
+                                        <?php } else { ?>
+                                            <i class="fa fa-star" style="color: black"></i>
+                                        <?php } ?> 
+                                    <?php } ?>
+                                </div>
+                            <?php } ?>
                         <div class="product-wid-price">
                             <ins>$<?php echo $viewResult['price'] ?></ins>
                             <?php if($viewResult['discount'] != null) : ?><del>$<?php echo $viewResult['discount'] ?></del><?php endif ?>
@@ -202,7 +260,8 @@ require "config/common.php";
                 </div>
             
             </div>
-            <?php endif ?>
+            <?php }} ?>
+            
            
 
             <?php 
@@ -217,6 +276,8 @@ require "config/common.php";
                     ]);
                     $newResult = $newStmt->fetchAll();
 
+
+
                 ?>
             <div class="col-md-4">
                 <div class="single-product-widget">
@@ -224,21 +285,47 @@ require "config/common.php";
                     <a href="top_new.php" class="wid-view-more">View All</a>
                     <?php 
                                 foreach($newResult as $value){
+                                    $rvStmt1 = $pdo->prepare("SELECT COUNT(*) as total, SUM(rating) as rating FROM product_review WHERE product_id=" . $value['id']);
+                                    $rvStmt1->execute();
+                                    $rvResult1 = $rvStmt1->fetch(\PDO::FETCH_ASSOC);
+                                    $pdrating = 0;
+                                    if ($rvResult1['total'] > 0) {
+                                        $pdrating = round(($rvResult1['rating']/($rvResult1['total'] * 5)) * 100);
+                                    }
+                                    $mypercent = 0;
+            
+                                    if ($pdrating > 80 && $pdrating <= 100){
+                                        $mypercent = 5;
+                                    } else if ($pdrating > 60 && $pdrating <= 80){
+                                        $mypercent = 4;
+                                    } else if ($pdrating > 40 && $pdrating <= 60){
+                                        $mypercent = 3;
+                                    } else if ($pdrating > 20 && $pdrating <= 40){
+                                        $mypercent = 2;
+                                    } else if ($pdrating > 0 && $pdrating <= 20){
+                                        $mypercent = 1;
+                                    } else {
+                                        $mypercent = 0;
+                                    }
                         ?>
                     <div class="single-wid-product">
                         <a href="product_detail.php?id=<?php echo $value['id'] ?>"><img
                                 src="admin/images/<?php echo $value['image'] ?>" alt="" class="product-thumb"></a>
                         <h2><a href="product_detail.php?id=<?php echo $value['id'] ?>"><?php echo $value['name'] ?></a>
                         </h2>
-                        <div class="product-wid-rating">
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                        </div>
+                        <?php if ($mypercent > 0) { ?>
+                                <div class="product-wid-rating">
+                                    <?php for($i = 0; $i < 5; $i++) { ?>
+                                        <?php if($i < $mypercent) { ?>
+                                            <i class="fa fa-star" style="color: gold"></i>
+                                        <?php } else { ?>
+                                            <i class="fa fa-star" style="color: black"></i>
+                                        <?php } ?> 
+                                    <?php } ?>
+                                </div>
+                            <?php } ?>
                         <div class="product-wid-price">
-                            <ins><?php echo $value['price'] ?></ins>
+                            <ins>$<?php echo $value['price'] ?></ins>
                             <?php if($value['discount'] != null) : ?><del>$<?php echo $value['discount'] ?></del><?php endif ?>
                         </div>
                     </div>
