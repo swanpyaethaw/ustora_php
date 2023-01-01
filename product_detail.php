@@ -12,25 +12,16 @@ if(isset($_SESSION['user_id'])){
     if(empty($_SESSION['view'][$_SESSION['user_id']])){
         $_SESSION['view'][$_SESSION['user_id']] = [];
         $_SESSION['view'][$_SESSION['user_id']][] = $_GET['id'];
-    }else{
-        $_SESSION['view'][$_SESSION['user_id']][] = $_GET['id'];
-    }
-    echo "<pre>";
-    print_r($_SESSION['view']);
-}
-
-
-
-
-
-
-
-
-
- 
+    }else{ 
+             if(!in_array(($_GET['id']),$_SESSION['view'][$_SESSION['user_id']])){
+            $_SESSION['view'][$_SESSION['user_id']][] = $_GET['id'];
+           }
     
+    }
+    // echo "<pre>";
+    // print_r($_SESSION['view']);
 
-
+}
 
 
 
@@ -149,10 +140,19 @@ if(isset($_POST['submit_review'])){
                                         <?php 
                                         
                                         if(isset($_SESSION['user_id'])){
-                                            $reviews = $pdo->prepare("SELECT * FROM product_review WHERE user_id =". $_SESSION['user_id']." AND product_id=" . $_GET['id']);
-                                            $reviews->execute();
-                                            $reviews = $reviews->fetchAll();
-                                            $reviewCount = count($reviews);
+                                            $rvStmt = $pdo->prepare("SELECT * FROM product_review WHERE user_id =". $_SESSION['user_id']." AND product_id=" . $_GET['id']);
+                                            $rvStmt->execute();
+                                            $rvResult = $rvStmt->fetchAll();
+                                            $rvCount = count($rvResult);
+                                            
+
+                                            $rvSaleStmt = $pdo->prepare("SELECT * FROM sale_orders JOIN sale_order_detail ON sale_orders.id = sale_order_detail.sale_order_id WHERE sale_orders.customer_id=".$_SESSION['user_id']." AND sale_order_detail.product_id=" . $_GET['id']);
+
+                                            $rvSaleStmt->execute();
+                                            $rvSaleResult = $rvSaleStmt->fetchAll();
+                                            $rvSaleCount = count($rvSaleResult);
+                                           
+                                          
                                         }
                                         
                                         
@@ -163,7 +163,7 @@ if(isset($_POST['submit_review'])){
                                         <li role="presentation" class="active"><a href="#home" aria-controls="home"
                                                 role="tab" data-toggle="tab">Description</a></li>
                                                 <?php if(isset($_SESSION['user_id'])) {
-                                                    if($reviewCount < 1){
+                                                    if($rvSaleCount > 0 && $rvCount < 1){
                                                 ?>
                                        
                                         <li role="presentation"><a href="#profile" aria-controls="profile" role="tab"
@@ -219,57 +219,44 @@ if(isset($_POST['submit_review'])){
                         $rvStmt1 = $pdo->prepare("SELECT COUNT(*) as total, SUM(rating) as rating FROM product_review WHERE product_id=" . $_GET['id']);
                         $rvStmt1->execute();
                         $rvStmt1 = $rvStmt1->fetch();
+
+                      
                         $pdrating = 0;
                         if ($rvStmt1['total'] > 0) {
                             $pdrating = round(($rvStmt1['rating']/($rvStmt1['total'] * 5)) * 100);
                         }
                         $star =  5 * ($pdrating/100);
-                        $one = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 1 GROUP BY rating");
+                        $one = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 1 ");
                         $one->execute();
                         $one = $one->fetch();
 
-                        $two = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 2 GROUP BY rating");
+                        $two = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 2 ");
                         $two->execute();
                         $two = $two->fetch();
 
-                        $three = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 3 GROUP BY rating");
+                        $three = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 3 ");
                         $three->execute();
                         $three = $three->fetch();
 
-                        $four = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 4 GROUP BY rating");
+                        $four = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 4 ");
                         $four->execute();
                         $four = $four->fetch();
 
-                        $five = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 5 GROUP BY rating");
+                        $five = $pdo->prepare("SELECT COUNT(rating) as rating_count, rating, product_id FROM product_review WHERE product_id=" . $_GET['id'] . " AND rating = 5 ");
                         $five->execute();
                         $five = $five->fetch();
                     ?>
                     <div class="all">
-                        <p class="total">Star Ratio: <?php echo $star ? number_format($star, 1): 0 ?></p>
+                        <p class="total">Star Ratio: <?php echo  number_format($star, 1) ?></p>
                         <p class="total">Total Users: <?php echo $rvStmt1['total'] ?></p>
                     </div>
                     <div class="rating">
                         <ul style="list-style-type: none">
-                            <?php for ($i=0; $i<5; $i++) { ?>
-                            <li>
-                                <span><?php echo 5-$i ?></span> => 
-                                <?php  
-                                    $myarray = [
-                                        ['name' => 1, 'value' => $one],
-                                        ['name' => 2, 'value' => $two],
-                                        ['name' => 3, 'value' => $three],
-                                        ['name' => 4, 'value' => $four],
-                                        ['name' => 5, 'value' => $five],
-                                    ];
-                                    $index = array_search(5-$i, array_column($myarray, 'name'));
-                                    if ($myarray[$index]['value'] && $myarray[$index]['value']['rating'] == 5-$i && $myarray[$index]['value']['rating_count'] > 0) {
-                                        echo $myarray[$index]['value']['rating_count'];
-                                    } else {
-                                        echo 0;
-                                    }
-                                ?>
-                            </li>
-                            <?php } ?>
+                            <li><span>5</span>=><?php echo $five['rating_count']  ?></li>
+                            <li><span>4</span>=><?php echo $four['rating_count'] ?></li>
+                            <li><span>3</span>=><?php echo $three['rating_count'] ?></li>
+                            <li><span>2</span>=><?php echo $two['rating_count']  ?></li>
+                            <li><span>1</span>=><?php echo $one['rating_count']  ?></li>
                         </ul>
                     </div>
                     <?php 

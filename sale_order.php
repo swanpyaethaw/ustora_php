@@ -104,6 +104,7 @@ require "config/config.php";
     
     <?php 
     $customerID = $_SESSION['user_id'];
+    echo $customerID;
     $total = 0;
     if(isset($_SESSION['cart'])){
         foreach($_SESSION['cart'] as $key=>$qty){
@@ -116,7 +117,7 @@ require "config/config.php";
 
             $stmt = $pdo->prepare("INSERT INTO sale_orders (customer_id,total_amount) VALUES (:id,:total)");
             $stmt->execute([
-                ':id' => $id,
+                ':id' => $customerID ,
                 ':total' => $total
 
             ]);

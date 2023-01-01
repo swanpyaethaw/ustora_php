@@ -7,7 +7,7 @@ require "config/common.php";
 if(isset($_POST['submit'])){
  
     $nameCheck = preg_match('/^[a-z\d]{4,12}$/i',$_POST['name']);
-    $emailCheck = preg_match('/^[a-z\d]+@[a-z]+\.[a-z]{2,3}(\.[a-z]{2})?$/',$_POST['email']);
+    $emailCheck = preg_match('/^[a-z\d]+@[a-z]+\.[a-z]{2,4}(\.[a-z]{2})?$/',$_POST['email']);
     $phoneCheck = preg_match('/^09[\d]{9}$/',$_POST['phone']);
     $passCheck = preg_match('/^[\w@-]{8,20}$/',$_POST['password']);
 

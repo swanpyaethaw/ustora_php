@@ -123,8 +123,21 @@
                     
                     ?>
 
-                   <?php if($page == "shop.php" || $page == "top_seller_view.php" || $page == "top_new.php") : ?>
-                    <form class="form-inline" action="shop.php" method="POST">
+                   <?php if($page == "shop.php" || $page == "top_seller_view.php" || $page == "top_new.php" || $page == "recent_view.php") : ?>
+                    <form class="form-inline" method="POST" 
+                        <?php if($page == "shop.php") : ?>
+                            action = "shop.php"
+                        <?php endif ?> 
+                        <?php if($page == "top_seller_view.php") : ?>
+                            action = "top_seller_view.php"
+                        <?php endif ?>
+                        <?php if($page == "top_new.php") : ?>
+                            action = "top_new.php"
+                        <?php endif ?>
+                        <?php if($page == "recent_view.php") : ?>
+                            action = "recent_view.php"
+                        <?php endif ?>
+                    >
                     <input type="hidden" name="_token" value="<?php echo $_SESSION['_token'] ?>">
       <input class="form-control mr-sm-2" name="search" type="search" placeholder="Search" aria-label="Search">
       <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>

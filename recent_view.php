@@ -8,12 +8,6 @@ require "config/common.php";
 
    
 
-        
-
-       
-    
-  
-
 ?>
 
 <?php include "header.php" ?>
@@ -37,13 +31,23 @@ require "config/common.php";
         <div class="row">
             <?php 
                 
-                foreach($_SESSION['view'] as $key=>$value) {
-                  $stmt = $pdo->prepare("SELECT * FROM products WHERE id=$value");
-                  $stmt->execute();
-                  $result = $stmt->fetch();
+                foreach($_SESSION['view'][$_SESSION['user_id']] as $key=>$value) {
+                    if(empty($_POST['search'])){
+                        $stmt = $pdo->prepare("SELECT * FROM products WHERE id=$value");
+                        $stmt->execute();
+                        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                       
+                    }else{
+                        $search = $_POST['search'];
+                        $stmt = $pdo->prepare("SELECT * FROM products WHERE name LIKE '%$search%' AND id=$value");
+                        $stmt->execute();
+                        $result = $stmt->fetch(); 
+               
+                    }
+                 
               
-                    
                     ?>
+                    <?php if(!empty($result) ) : ?>
             <div class="col-md-3 col-sm-6">
                 <div class="single-shop-product">
                     <div class="product-upper">
@@ -63,6 +67,7 @@ require "config/common.php";
                     </div>
                 </div>
             </div>
+            <?php endif ?>
             <?php   } ?>
 
         </div>
